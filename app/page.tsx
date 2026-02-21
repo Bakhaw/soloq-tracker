@@ -11,8 +11,7 @@ import { WinrateChart } from "@/components/winrate-chart"
 import { SessionHistory } from "@/components/session-history"
 import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 import { EmptyState } from "@/components/empty-state"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Swords, Shield } from "lucide-react"
 
 type AppState = "search" | "loading" | "dashboard" | "empty"
 
@@ -67,17 +66,7 @@ export default function Home() {
 
       {appState === "loading" && (
         <div className="container mx-auto px-4 max-w-5xl py-8">
-          <div className="flex items-center gap-2 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
-          </div>
+          <BackButton onClick={handleBack} />
           <DashboardSkeleton />
         </div>
       )}
@@ -85,15 +74,7 @@ export default function Home() {
       {appState === "empty" && (
         <div className="container mx-auto px-4 max-w-lg">
           <div className="pt-8">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="text-muted-foreground hover:text-foreground mb-4"
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
+            <BackButton onClick={handleBack} />
             <EmptyState />
           </div>
         </div>
@@ -101,17 +82,13 @@ export default function Home() {
 
       {appState === "dashboard" && activeSession && profile && (
         <div className="container mx-auto px-4 max-w-6xl py-6">
-          {/* Back button */}
-          <div className="flex items-center gap-2 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBack}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              New Search
-            </Button>
+          {/* Top bar */}
+          <div className="flex items-center justify-between mb-6">
+            <BackButton onClick={handleBack} />
+            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <Shield className="h-3 w-3 text-primary" />
+              <span className="font-mono uppercase tracking-wider">Ranked Solo/Duo</span>
+            </div>
           </div>
 
           {/* Main layout: sidebar + content */}
@@ -126,7 +103,7 @@ export default function Home() {
             </aside>
 
             {/* Main content */}
-            <div className="flex-1 flex flex-col gap-6 order-1 lg:order-2 min-w-0">
+            <div className="flex-1 flex flex-col gap-5 order-1 lg:order-2 min-w-0">
               <SessionDashboard
                 session={activeSession}
                 profile={profile}
@@ -144,5 +121,18 @@ export default function Home() {
         </div>
       )}
     </main>
+  )
+}
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mb-4 group"
+    >
+      <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+      <Swords className="h-3 w-3 text-primary" />
+      <span className="font-semibold uppercase tracking-wider">New Search</span>
+    </button>
   )
 }

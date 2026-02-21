@@ -1,8 +1,7 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, ChevronRight } from "lucide-react"
+import { Calendar, ChevronRight, Flame, Skull, Minus } from "lucide-react"
 import type { Session } from "@/types"
 import { getSessionLabel } from "@/utils/sessionGrouper"
 import { cn } from "@/lib/utils"
@@ -13,6 +12,12 @@ interface SessionHistoryProps {
   onSelectSession: (sessionId: string) => void
 }
 
+function getMoodIcon(winRate: number) {
+  if (winRate >= 60) return <Flame className="h-3 w-3 text-win" />
+  if (winRate >= 45) return <Minus className="h-3 w-3 text-gold-dim" />
+  return <Skull className="h-3 w-3 text-loss" />
+}
+
 export function SessionHistory({
   sessions,
   activeSessionId,
@@ -20,11 +25,11 @@ export function SessionHistory({
 }: SessionHistoryProps) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-        <Calendar className="h-4 w-4" />
-        Session History
+      <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+        <Calendar className="h-4 w-4 text-primary" />
+        Session Archive
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         {sessions.map((session) => {
           const isActive = session.id === activeSessionId
 
@@ -34,46 +39,49 @@ export function SessionHistory({
               onClick={() => onSelectSession(session.id)}
               className="w-full text-left"
             >
-              <Card
+              <div
                 className={cn(
-                  "bg-card border-border transition-colors hover:bg-accent/60 cursor-pointer",
-                  isActive && "border-primary/40 bg-primary/5"
+                  "rounded-lg transition-all p-3 flex items-center justify-between gap-2 group",
+                  isActive
+                    ? "lol-border-glow bg-card"
+                    : "lol-border hover:border-primary/30"
                 )}
               >
-                <CardContent className="p-3 flex items-center justify-between">
-                  <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2.5">
+                  {getMoodIcon(session.winRate)}
+                  <div className="flex flex-col gap-0.5">
                     <p className={cn(
-                      "text-sm font-medium",
+                      "text-sm font-semibold",
                       isActive ? "text-primary" : "text-foreground"
                     )}>
                       {getSessionLabel(session.date)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {session.totalGames} games
+                    <p className="text-[10px] text-muted-foreground font-mono">
+                      {session.totalGames} games &middot; {session.wins}W {session.losses}L
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      className={cn(
-                        "text-xs border-none font-semibold",
-                        session.winRate >= 60
-                          ? "bg-win/15 text-win"
-                          : session.winRate >= 50
-                          ? "bg-primary/15 text-primary"
-                          : "bg-loss/15 text-loss"
-                      )}
-                    >
-                      {session.winRate}%
-                    </Badge>
-                    <ChevronRight
-                      className={cn(
-                        "h-4 w-4",
-                        isActive ? "text-primary" : "text-muted-foreground"
-                      )}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge
+                    className={cn(
+                      "text-[10px] border font-bold font-mono px-1.5 h-5",
+                      session.winRate >= 60
+                        ? "bg-win/15 text-win border-win/30"
+                        : session.winRate >= 50
+                        ? "bg-primary/15 text-primary border-primary/30"
+                        : "bg-loss/15 text-loss border-loss/30"
+                    )}
+                  >
+                    {session.winRate}%
+                  </Badge>
+                  <ChevronRight
+                    className={cn(
+                      "h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5",
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    )}
+                  />
+                </div>
+              </div>
             </button>
           )
         })}

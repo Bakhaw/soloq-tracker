@@ -1,7 +1,6 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp } from "lucide-react"
+import { TrendingUp, BarChart3 } from "lucide-react"
 import {
   BarChart,
   Bar,
@@ -30,73 +29,86 @@ export function WinrateChart({ sessions }: WinrateChartProps) {
   }))
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <TrendingUp className="h-4 w-4" />
-          Win Rate by Session
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="h-48">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="oklch(0.25 0.01 260)"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 11, fill: "oklch(0.60 0.02 260)" }}
-                axisLine={{ stroke: "oklch(0.25 0.01 260)" }}
-                tickLine={false}
-              />
-              <YAxis
-                domain={[0, 100]}
-                tick={{ fontSize: 11, fill: "oklch(0.60 0.02 260)" }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `${v}%`}
-              />
-              <ReferenceLine
-                y={50}
-                stroke="oklch(0.40 0.01 260)"
-                strokeDasharray="4 4"
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload?.[0]) return null
-                  const d = payload[0].payload
-                  return (
-                    <div className="bg-popover border border-border rounded-md px-3 py-2 text-xs shadow-lg">
-                      <p className="font-medium text-foreground">{d.name}</p>
-                      <p className="text-muted-foreground">
-                        {d.winRate}% WR &middot; {d.wins}W {d.losses}L
-                      </p>
-                    </div>
-                  )
-                }}
-              />
-              <Bar dataKey="winRate" radius={[4, 4, 0, 0]} maxBarSize={40}>
-                {data.map((entry, index) => (
-                  <Cell
-                    key={index}
-                    fill={
-                      entry.winRate >= 60
-                        ? "oklch(0.70 0.18 155)"
-                        : entry.winRate >= 50
-                        ? "oklch(0.65 0.2 250)"
-                        : "oklch(0.55 0.22 25)"
-                    }
-                    fillOpacity={0.85}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+    <div className="lol-border rounded-lg p-4 animate-slide-up" style={{ animationDelay: "100ms" }}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          <BarChart3 className="h-4 w-4 text-primary" />
+          Performance Timeline
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+          <TrendingUp className="h-3 w-3 text-primary" />
+          <span className="font-mono">
+            {data.length} sessions tracked
+          </span>
+        </div>
+      </div>
+      <div className="h-48">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="oklch(0.24 0.03 250)"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize: 10, fill: "oklch(0.55 0.03 250)" }}
+              axisLine={{ stroke: "oklch(0.24 0.03 250)" }}
+              tickLine={false}
+            />
+            <YAxis
+              domain={[0, 100]}
+              tick={{ fontSize: 10, fill: "oklch(0.55 0.03 250)" }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => `${v}%`}
+            />
+            <ReferenceLine
+              y={50}
+              stroke="oklch(0.78 0.14 80 / 0.3)"
+              strokeDasharray="4 4"
+              label={{
+                value: "50%",
+                position: "right",
+                fill: "oklch(0.78 0.14 80 / 0.5)",
+                fontSize: 9,
+              }}
+            />
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.[0]) return null
+                const d = payload[0].payload
+                return (
+                  <div className="lol-border-glow rounded-lg px-3 py-2 text-xs bg-card shadow-xl">
+                    <p className="font-bold text-primary text-[11px]">{d.name}</p>
+                    <p className="text-foreground font-mono mt-1">
+                      {d.winRate}% WR
+                    </p>
+                    <p className="text-muted-foreground">
+                      {d.wins}W {d.losses}L &middot; {d.games} games
+                    </p>
+                  </div>
+                )
+              }}
+            />
+            <Bar dataKey="winRate" radius={[4, 4, 0, 0]} maxBarSize={36}>
+              {data.map((entry, index) => (
+                <Cell
+                  key={index}
+                  fill={
+                    entry.winRate >= 60
+                      ? "oklch(0.68 0.18 170)"
+                      : entry.winRate >= 50
+                      ? "oklch(0.78 0.14 80)"
+                      : "oklch(0.58 0.22 25)"
+                  }
+                  fillOpacity={0.9}
+                />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   )
 }

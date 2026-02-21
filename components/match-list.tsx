@@ -1,26 +1,37 @@
 "use client"
 
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { RankedMatch } from "@/types"
 import { formatDuration } from "@/utils/sessionGrouper"
 import { getChampionIconUrl, getRoleIcon, getRoleColor } from "@/utils/champions"
 import { cn } from "@/lib/utils"
-import { Swords } from "lucide-react"
+import { Swords, Crown, Skull, Flame } from "lucide-react"
 
 interface MatchListProps {
   matches: RankedMatch[]
 }
 
+function getKDALabel(kills: number, deaths: number, assists: number): { label: string; className: string } | null {
+  const kda = deaths === 0 ? kills + assists : (kills + assists) / deaths
+  if (deaths === 0 && kills + assists >= 6) return { label: "PERFECT", className: "text-primary bg-primary/15 border-primary/30" }
+  if (kda >= 5) return { label: "LEGENDARY", className: "text-primary bg-primary/15 border-primary/30" }
+  if (kda >= 3.5) return { label: "GREAT", className: "text-win bg-win/15 border-win/30" }
+  if (deaths >= 8) return { label: "FEEDER", className: "text-loss bg-loss/15 border-loss/30" }
+  return null
+}
+
 export function MatchList({ matches }: MatchListProps) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-1">
-        <Swords className="h-4 w-4" />
-        Match History
+      <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
+        <Swords className="h-4 w-4 text-primary" />
+        Battle Log
+        <span className="text-primary font-mono">({matches.length})</span>
       </div>
-      {matches.map((match) => (
-        <MatchRow key={match.matchId} match={match} />
+      {matches.map((match, i) => (
+        <div key={match.matchId} className="animate-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
+          <MatchRow match={match} />
+        </div>
       ))}
     </div>
   )
@@ -32,46 +43,67 @@ function MatchRow({ match }: { match: RankedMatch }) {
     match.deaths === 0
       ? match.kills + match.assists
       : (match.kills + match.assists) / match.deaths
+  const kdaLabel = getKDALabel(match.kills, match.deaths, match.assists)
 
   return (
-    <Card
+    <div
       className={cn(
-        "bg-card border-border overflow-hidden transition-colors hover:bg-accent/40",
-        match.win ? "border-l-2 border-l-win" : "border-l-2 border-l-loss"
+        "rounded-lg overflow-hidden transition-all hover:scale-[1.01] hover:shadow-lg",
+        match.win ? "lol-border" : "border border-loss/20 bg-card"
       )}
     >
-      <CardContent className="p-3 flex items-center gap-3">
-        {/* Champion icon */}
-        <div className="relative h-10 w-10 shrink-0 rounded-full overflow-hidden bg-muted">
+      <div className="flex items-center gap-3 p-3">
+        {/* Win/Loss indicator bar */}
+        <div className={cn(
+          "w-1 self-stretch rounded-full shrink-0",
+          match.win ? "bg-win" : "bg-loss"
+        )} />
+
+        {/* Champion icon with ring */}
+        <div className={cn(
+          "relative h-11 w-11 shrink-0 rounded-lg overflow-hidden ring-2",
+          match.win ? "ring-win/50" : "ring-loss/50"
+        )}>
           <img
             src={getChampionIconUrl(match.champion)}
             alt={match.champion}
             className="h-full w-full object-cover"
             crossOrigin="anonymous"
           />
+          {/* Outcome icon overlay */}
+          <div className={cn(
+            "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full flex items-center justify-center",
+            match.win ? "bg-win" : "bg-loss"
+          )}>
+            {match.win ? (
+              <Crown className="h-2.5 w-2.5 text-win-foreground" />
+            ) : (
+              <Skull className="h-2.5 w-2.5 text-loss-foreground" />
+            )}
+          </div>
         </div>
 
-        {/* Champion name + KDA */}
+        {/* Champion name + KDA + role */}
         <div className="flex flex-col gap-0.5 min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-foreground truncate">
+            <span className="text-sm font-semibold text-foreground truncate">
               {match.champion}
             </span>
-            <Badge
-              className={cn(
-                "text-[10px] px-1.5 py-0 h-4 border-none font-semibold shrink-0",
-                match.win
-                  ? "bg-win/15 text-win"
-                  : "bg-loss/15 text-loss"
-              )}
-            >
-              {match.win ? "WIN" : "LOSS"}
-            </Badge>
+            {kdaLabel && (
+              <Badge
+                className={cn(
+                  "text-[9px] px-1.5 py-0 h-4 border font-bold uppercase tracking-wider shrink-0",
+                  kdaLabel.className
+                )}
+              >
+                {kdaLabel.label}
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span
               className={cn(
-                "font-mono font-medium",
+                "font-mono font-semibold",
                 kdaRatio >= 4
                   ? "text-win"
                   : kdaRatio >= 2
@@ -81,26 +113,32 @@ function MatchRow({ match }: { match: RankedMatch }) {
             >
               {kda}
             </span>
-            <span className="text-border">&middot;</span>
-            <span className={getRoleColor(match.role)}>
+            <span className="text-border">|</span>
+            <span className={cn("font-medium", getRoleColor(match.role))}>
               {getRoleIcon(match.role)}
             </span>
-            <span className="text-border">&middot;</span>
-            <span>{match.cs} CS</span>
+            <span className="text-border">|</span>
+            <span className="font-mono">{match.cs} CS</span>
           </div>
         </div>
 
-        {/* Duration + time */}
-        <div className="flex flex-col items-end gap-0.5 shrink-0">
-          <span className="text-xs font-medium text-muted-foreground font-mono">
+        {/* Duration + MVP marker for high KDA wins */}
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className="text-xs font-mono font-medium text-muted-foreground">
             {formatDuration(match.duration)}
           </span>
-          <span className="text-[10px] text-muted-foreground/70">
+          {match.win && kdaRatio >= 4 && (
+            <div className="flex items-center gap-0.5">
+              <Flame className="h-3 w-3 text-primary animate-streak-fire" />
+              <span className="text-[9px] font-bold text-primary uppercase">MVP</span>
+            </div>
+          )}
+          <span className="text-[10px] text-muted-foreground/60 font-mono">
             {formatTimeAgo(match.timestamp)}
           </span>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
