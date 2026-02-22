@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useMemo, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import type { Region, Session } from "@/types"
 import { groupMatchesIntoSessions } from "@/utils/sessionGrouper"
 import { useSummoner } from "@/hooks/use-summoner"
@@ -22,9 +23,22 @@ interface SearchParams {
 }
 
 export default function Home() {
+  const router = useRouter()
+  const urlSearchParams = useSearchParams()
   const [searchParams, setSearchParams] = useState<SearchParams | null>(null)
   const [activeSessionId, setActiveSessionId] = useState<string>("")
   const { addToHistory } = useSummonerHistory()
+
+  // Initialize search params from URL on mount
+  useEffect(() => {
+    const gameName = urlSearchParams.get("gameName")
+    const tag = urlSearchParams.get("tag")
+    const region = urlSearchParams.get("region") as Region | null
+
+    if (gameName && tag && region) {
+      setSearchParams({ gameName, tag, region })
+    }
+  }, []) // Only run on mount
 
   // Fetch summoner data
   const {
@@ -81,12 +95,19 @@ export default function Home() {
   const handleSearch = useCallback((gameName: string, tag: string, region: Region) => {
     setSearchParams({ gameName, tag, region })
     setActiveSessionId("")
-  }, [])
+    
+    // Update URL with search params
+    const params = new URLSearchParams({ gameName, tag, region })
+    router.push(`/?${params.toString()}`)
+  }, [router])
 
   const handleBack = useCallback(() => {
     setSearchParams(null)
     setActiveSessionId("")
-  }, [])
+    
+    // Clear URL params
+    router.push("/")
+  }, [router])
 
   return (
     <main className="min-h-screen">
@@ -103,7 +124,7 @@ export default function Home() {
         </div>
       )}
 
-      {(isError || hasNoData) && (
+      {searchParams && (isError || hasNoData) && (
         <div className="container mx-auto px-4 max-w-lg">
           <div className="pt-8">
             <BackButton onClick={handleBack} />

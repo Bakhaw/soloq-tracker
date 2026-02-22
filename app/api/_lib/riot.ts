@@ -276,9 +276,12 @@ export async function extractMatchData(
   const championMap = await getChampionIdToNameMap()
   const champion = championMap[championId] || `Champion${championId}`
 
+  // Calculate end timestamp: gameCreation (ms) + gameDuration (seconds * 1000)
+  const endTimestamp = gameCreation + gameDuration * 1000
+
   return {
     matchId: matchData.metadata.matchId,
-    timestamp: gameCreation,
+    timestamp: endTimestamp,
     champion,
     win,
     kills,
