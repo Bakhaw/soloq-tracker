@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import type { Region, Session, SummonerProfile } from "@/types"
+import { useState, useCallback, useMemo, useEffect } from "react"
+import type { Region, Session } from "@/types"
 import { groupMatchesIntoSessions } from "@/utils/sessionGrouper"
-import { fetchRankedMatches, fetchSummonerProfile } from "@/services/riotMockService"
+import { useSummoner } from "@/hooks/use-summoner"
+import { useMatches } from "@/hooks/use-matches"
+import { useSummonerHistory } from "@/hooks/use-summoner-history"
 import { SummonerSearch } from "@/components/summoner-search"
 import { SessionDashboard } from "@/components/session-dashboard"
 import { MatchList } from "@/components/match-list"
@@ -13,65 +15,95 @@ import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 import { EmptyState } from "@/components/empty-state"
 import { ArrowLeft, Swords, Shield } from "lucide-react"
 
-type AppState = "search" | "loading" | "dashboard" | "empty"
+interface SearchParams {
+  gameName: string
+  tag: string
+  region: Region
+}
 
 export default function Home() {
-  const [appState, setAppState] = useState<AppState>("search")
-  const [sessions, setSessions] = useState<Session[]>([])
+  const [searchParams, setSearchParams] = useState<SearchParams | null>(null)
   const [activeSessionId, setActiveSessionId] = useState<string>("")
-  const [profile, setProfile] = useState<SummonerProfile | null>(null)
+  const { addToHistory } = useSummonerHistory()
+
+  // Fetch summoner data
+  const {
+    data: profile,
+    isLoading: isLoadingSummoner,
+    isError: isSummonerError,
+  } = useSummoner({
+    gameName: searchParams?.gameName ?? "",
+    tag: searchParams?.tag ?? "",
+    region: searchParams?.region ?? "EUW",
+    enabled: searchParams !== null,
+  })
+
+  // Fetch matches data (only when we have a profile with puuid)
+  const {
+    data: matches,
+    isLoading: isLoadingMatches,
+    isError: isMatchesError,
+  } = useMatches({
+    puuid: profile?.puuid ?? "",
+    region: searchParams?.region ?? "EUW",
+    count: 30,
+    enabled: profile !== undefined && profile !== null,
+  })
+
+  // Process matches into sessions
+  const sessions = useMemo(() => {
+    if (!matches || matches.length === 0) return []
+    return groupMatchesIntoSessions(matches)
+  }, [matches])
+
+  // Set active session to first session when sessions are loaded
+  useEffect(() => {
+    if (sessions.length > 0 && !activeSessionId) {
+      setActiveSessionId(sessions[0].id)
+    }
+  }, [sessions, activeSessionId])
+
+  // Save to history when profile resolves successfully
+  useEffect(() => {
+    if (profile && searchParams) {
+      addToHistory(profile, searchParams.gameName, searchParams.tag)
+    }
+  }, [profile, searchParams, addToHistory])
 
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0]
 
-  const handleSearch = useCallback(async (name: string, region: Region) => {
-    setAppState("loading")
+  // Determine app state
+  const isLoading = isLoadingSummoner || isLoadingMatches
+  const isError = isSummonerError || isMatchesError
+  const hasNoData = !isLoading && !isError && (sessions.length === 0 || !profile)
+  const showDashboard = !isLoading && !isError && profile && sessions.length > 0
 
-    try {
-      const [profileData, matches] = await Promise.all([
-        fetchSummonerProfile(name, region),
-        fetchRankedMatches(name, region),
-      ])
-
-      setProfile(profileData)
-
-      const grouped = groupMatchesIntoSessions(matches)
-
-      if (grouped.length === 0) {
-        setAppState("empty")
-        return
-      }
-
-      setSessions(grouped)
-      setActiveSessionId(grouped[0].id)
-      setAppState("dashboard")
-    } catch {
-      setAppState("empty")
-    }
+  const handleSearch = useCallback((gameName: string, tag: string, region: Region) => {
+    setSearchParams({ gameName, tag, region })
+    setActiveSessionId("")
   }, [])
 
   const handleBack = useCallback(() => {
-    setAppState("search")
-    setSessions([])
-    setProfile(null)
+    setSearchParams(null)
     setActiveSessionId("")
   }, [])
 
   return (
     <main className="min-h-screen">
-      {appState === "search" && (
+      {!searchParams && (
         <div className="container mx-auto px-4 max-w-lg">
           <SummonerSearch onSearch={handleSearch} isLoading={false} />
         </div>
       )}
 
-      {appState === "loading" && (
+      {isLoading && (
         <div className="container mx-auto px-4 max-w-5xl py-8">
           <BackButton onClick={handleBack} />
           <DashboardSkeleton />
         </div>
       )}
 
-      {appState === "empty" && (
+      {(isError || hasNoData) && (
         <div className="container mx-auto px-4 max-w-lg">
           <div className="pt-8">
             <BackButton onClick={handleBack} />
@@ -80,7 +112,7 @@ export default function Home() {
         </div>
       )}
 
-      {appState === "dashboard" && activeSession && profile && (
+      {showDashboard && activeSession && profile && (
         <div className="container mx-auto px-4 max-w-6xl py-6">
           {/* Top bar */}
           <div className="flex items-center justify-between mb-6">

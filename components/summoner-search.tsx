@@ -28,18 +28,28 @@ const REGIONS: { value: Region; label: string }[] = [
 ]
 
 interface SummonerSearchProps {
-  onSearch: (name: string, region: Region) => void
+  onSearch: (gameName: string, tag: string, region: Region) => void
   isLoading: boolean
 }
 
 export function SummonerSearch({ onSearch, isLoading }: SummonerSearchProps) {
-  const [name, setName] = useState("")
+  const [riotId, setRiotId] = useState("")
   const [region, setRegion] = useState<Region>("EUW")
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (name.trim()) {
-      onSearch(name.trim(), region)
+    const trimmed = riotId.trim()
+    if (!trimmed) return
+
+    // Parse Riot ID format: GameName#TAG
+    const parts = trimmed.split("#")
+    if (parts.length !== 2) {
+      return
+    }
+
+    const [gameName, tag] = parts
+    if (gameName.trim() && tag.trim()) {
+      onSearch(gameName.trim(), tag.trim(), region)
     }
   }
 
@@ -88,15 +98,15 @@ export function SummonerSearch({ onSearch, isLoading }: SummonerSearchProps) {
               </SelectContent>
             </Select>
             <Input
-              placeholder="Summoner Name..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              placeholder="GameName#TAG"
+              value={riotId}
+              onChange={(e) => setRiotId(e.target.value)}
               className="flex-1 bg-input border-border placeholder:text-muted-foreground"
             />
           </div>
           <Button
             type="submit"
-            disabled={!name.trim() || isLoading}
+            disabled={!riotId.trim() || isLoading}
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold tracking-wide uppercase text-sm h-11"
           >
             {isLoading ? (
@@ -112,10 +122,6 @@ export function SummonerSearch({ onSearch, isLoading }: SummonerSearchProps) {
             )}
           </Button>
         </div>
-
-        <p className="text-[11px] text-muted-foreground/70 text-center">
-          Using mock data for demo purposes
-        </p>
       </form>
     </div>
   )

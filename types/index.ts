@@ -37,4 +37,17 @@ export interface SummonerProfile {
   level: number
   rank: string
   lp: number
+  puuid: string
+  profileIconId: number
+}
+
+export interface SummonerHistoryEntry {
+  gameName: string
+  tag: string
+  region: Region
+  rank: string
+  lp: number
+  level: number
+  profileIconId: number
+  lastSearched: number // Date.now()
 }

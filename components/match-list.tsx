@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import type { RankedMatch } from "@/types"
 import { formatDuration } from "@/utils/sessionGrouper"
 import { getChampionIconUrl, getRoleIcon, getRoleColor } from "@/utils/champions"
+import { useDdragonVersion } from "@/hooks/use-ddragon-version"
 import { cn } from "@/lib/utils"
 import { Swords, Crown, Skull, Flame } from "lucide-react"
 
@@ -21,6 +22,8 @@ function getKDALabel(kills: number, deaths: number, assists: number): { label: s
 }
 
 export function MatchList({ matches }: MatchListProps) {
+  const { data: ddragonVersion = "15.1.1" } = useDdragonVersion()
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">
@@ -30,14 +33,14 @@ export function MatchList({ matches }: MatchListProps) {
       </div>
       {matches.map((match, i) => (
         <div key={match.matchId} className="animate-slide-up" style={{ animationDelay: `${i * 40}ms` }}>
-          <MatchRow match={match} />
+          <MatchRow match={match} ddragonVersion={ddragonVersion} />
         </div>
       ))}
     </div>
   )
 }
 
-function MatchRow({ match }: { match: RankedMatch }) {
+function MatchRow({ match, ddragonVersion }: { match: RankedMatch; ddragonVersion: string }) {
   const kda = `${match.kills}/${match.deaths}/${match.assists}`
   const kdaRatio =
     match.deaths === 0
@@ -65,7 +68,7 @@ function MatchRow({ match }: { match: RankedMatch }) {
           match.win ? "ring-win/50" : "ring-loss/50"
         )}>
           <img
-            src={getChampionIconUrl(match.champion)}
+            src={getChampionIconUrl(match.champion, ddragonVersion)}
             alt={match.champion}
             className="h-full w-full object-cover"
             crossOrigin="anonymous"

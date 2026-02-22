@@ -1,8 +1,7 @@
-// Champion icon URLs from Data Dragon (Riot's CDN)
-const DDRAGON_VERSION = "14.4.1"
-
-export function getChampionIconUrl(championName: string): string {
-  return `https://ddragon.leagueoflegends.com/cdn/${DDRAGON_VERSION}/img/champion/${championName}.png`
+// Champion icon URLs from Riot's Data Dragon CDN
+// Version is passed dynamically so icons are always up to date
+export function getChampionIconUrl(championName: string, version: string): string {
+  return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${championName}.png`
 }
 
 export function getRoleIcon(role: string): string {
