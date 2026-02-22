@@ -8,7 +8,7 @@ const _inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" })
 
 export const metadata: Metadata = {
-  title: 'Session Tracker — League of Legends Daily Recap',
+  title: 'SoloQ Tracker — League of Legends Daily Recap',
   description: 'Track your daily ranked gaming sessions, win rates, and performance in League of Legends.',
   icons: {
     icon: [

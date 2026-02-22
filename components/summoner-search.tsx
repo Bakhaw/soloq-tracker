@@ -33,24 +33,20 @@ interface SummonerSearchProps {
 }
 
 export function SummonerSearch({ onSearch, isLoading }: SummonerSearchProps) {
-  const [riotId, setRiotId] = useState("")
+  const [gameName, setGameName] = useState("")
+  const [tag, setTag] = useState("")
   const [region, setRegion] = useState<Region>("EUW")
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const trimmed = riotId.trim()
-    if (!trimmed) return
-
-    // Parse Riot ID format: GameName#TAG
-    const parts = trimmed.split("#")
-    if (parts.length !== 2) {
+    const trimmedGameName = gameName.trim()
+    const trimmedTag = tag.trim()
+    
+    if (!trimmedGameName || !trimmedTag) {
       return
     }
 
-    const [gameName, tag] = parts
-    if (gameName.trim() && tag.trim()) {
-      onSearch(gameName.trim(), tag.trim(), region)
-    }
+    onSearch(trimmedGameName, trimmedTag, region)
   }
 
   return (
@@ -67,7 +63,7 @@ export function SummonerSearch({ onSearch, isLoading }: SummonerSearchProps) {
         </div>
         <div className="flex flex-col items-center gap-1.5">
           <h1 className="text-3xl font-bold tracking-tight text-primary text-balance text-center">
-            Session Tracker
+            SoloQ Tracker
           </h1>
           <p className="text-sm text-muted-foreground text-center max-w-xs leading-relaxed">
             Track your daily ranked grind. See win streaks, tilt detectors, and your session performance at a glance.
@@ -98,15 +94,24 @@ export function SummonerSearch({ onSearch, isLoading }: SummonerSearchProps) {
               </SelectContent>
             </Select>
             <Input
-              placeholder="GameName#TAG"
-              value={riotId}
-              onChange={(e) => setRiotId(e.target.value)}
+              placeholder="GameName"
+              value={gameName}
+              onChange={(e) => setGameName(e.target.value)}
               className="flex-1 bg-input border-border placeholder:text-muted-foreground"
+            />
+            <div className="flex items-center px-2 text-muted-foreground font-mono">
+              #
+            </div>
+            <Input
+              placeholder="TAG"
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              className="w-24 bg-input border-border placeholder:text-muted-foreground"
             />
           </div>
           <Button
             type="submit"
-            disabled={!riotId.trim() || isLoading}
+            disabled={!gameName.trim() || !tag.trim() || isLoading}
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold tracking-wide uppercase text-sm h-11"
           >
             {isLoading ? (
