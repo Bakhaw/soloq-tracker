@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo, useEffect } from "react"
+import { useState, useCallback, useMemo, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import type { Region, Session } from "@/types"
 import { groupMatchesIntoSessions } from "@/utils/sessionGrouper"
@@ -22,7 +22,7 @@ interface SearchParams {
   region: Region
 }
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter()
   const urlSearchParams = useSearchParams()
   const [searchParams, setSearchParams] = useState<SearchParams | null>(null)
@@ -38,7 +38,7 @@ export default function Home() {
     if (gameName && tag && region) {
       setSearchParams({ gameName, tag, region })
     }
-  }, []) // Only run on mount
+  }, [urlSearchParams])
 
   // Fetch summoner data
   const {
@@ -174,6 +174,20 @@ export default function Home() {
         </div>
       )}
     </main>
+  )
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen">
+        <div className="container mx-auto px-4 max-w-lg">
+          <SummonerSearch onSearch={() => {}} isLoading={false} />
+        </div>
+      </main>
+    }>
+      <HomeContent />
+    </Suspense>
   )
 }
 
