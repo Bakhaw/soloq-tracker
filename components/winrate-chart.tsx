@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   Cell,
   ReferenceLine,
+  LabelList,
 } from "recharts"
 import type { Session } from "@/types"
 import { getSessionLabel } from "@/utils/sessionGrouper"
@@ -44,7 +45,7 @@ export function WinrateChart({ sessions }: WinrateChartProps) {
       </div>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <BarChart data={data} margin={{ top: 24, right: 8, left: -16, bottom: 0 }}>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="oklch(0.24 0.03 250)"
@@ -92,6 +93,15 @@ export function WinrateChart({ sessions }: WinrateChartProps) {
               }}
             />
             <Bar dataKey="winRate" radius={[4, 4, 0, 0]} maxBarSize={36}>
+              <LabelList
+                dataKey="games"
+                position="top"
+                formatter={(value: number) => `${value} games`}
+                style={{
+                  fontSize: 10,
+                  fill: "oklch(0.55 0.03 250)",
+                }}
+              />
               {data.map((entry, index) => (
                 <Cell
                   key={index}
