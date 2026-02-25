@@ -72,8 +72,8 @@ function getRegionalApiUrl(region: Region): string {
   return `https://${REGION_TO_ROUTING[region]}.api.riotgames.com`
 }
 
-// Helper: make a Riot API request with proper error handling
-async function riotFetch(url: string, apiKey: string): Promise<Response> {
+// Helper: make a Riot API request with proper error handling and automatic retry on 429
+async function riotFetch(url: string, apiKey: string, retries = 1): Promise<Response> {
   const response = await fetch(url, {
     headers: { "X-Riot-Token": apiKey },
   })
@@ -98,6 +98,13 @@ async function riotFetch(url: string, apiKey: string): Promise<Response> {
       )
     }
     if (response.status === 429) {
+      if (retries > 0) {
+        // Respect the Retry-After header but cap at 5s to avoid long hangs
+        const retryAfter = Math.min(parseInt(response.headers.get("Retry-After") ?? "5", 10), 5)
+        console.warn(`[Riot API] Rate limited. Retrying after ${retryAfter}s (${retries} retries left)`)
+        await new Promise((resolve) => setTimeout(resolve, (retryAfter + 1) * 1000))
+        return riotFetch(url, apiKey, retries - 1)
+      }
       throw new Error("Rate limit exceeded. Please wait a moment before trying again.")
     }
 
@@ -166,10 +173,11 @@ export async function getRankedEntries(
 export async function getMatchIds(
   puuid: string,
   region: Region,
-  count: number = 30
+  count: number = 100,
+  start: number = 0
 ): Promise<string[]> {
   const apiKey = getApiKey()
-  const url = `${getRegionalApiUrl(region)}/lol/match/v5/matches/by-puuid/${puuid}/ids?type=ranked&count=${count}`
+  const url = `${getRegionalApiUrl(region)}/lol/match/v5/matches/by-puuid/${puuid}/ids?type=ranked&start=${start}&count=${count}`
   const response = await riotFetch(url, apiKey)
   return response.json()
 }

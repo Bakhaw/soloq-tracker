@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import type { Region, Session } from "@/types"
+import type { Region, Session, RankedMatch } from "@/types"
 import { groupMatchesIntoSessions } from "@/utils/sessionGrouper"
 import { useSummoner } from "@/hooks/use-summoner"
 import { useMatches } from "@/hooks/use-matches"
@@ -14,7 +14,9 @@ import { WinrateChart } from "@/components/winrate-chart"
 import { SessionHistory } from "@/components/session-history"
 import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 import { EmptyState } from "@/components/empty-state"
-import { ArrowLeft, Swords, Shield } from "lucide-react"
+import { ArrowLeft, Swords, Shield, ChevronDown, Loader2 } from "lucide-react"
+
+const PAGE_SIZE = 30
 
 interface SearchParams {
   gameName: string
@@ -27,6 +29,10 @@ function HomeContent() {
   const urlSearchParams = useSearchParams()
   const [searchParams, setSearchParams] = useState<SearchParams | null>(null)
   const [activeSessionId, setActiveSessionId] = useState<string>("")
+  const [extraMatches, setExtraMatches] = useState<RankedMatch[]>([])
+  const [loadMoreStart, setLoadMoreStart] = useState(PAGE_SIZE)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
   const { addToHistory } = useSummonerHistory()
 
   // Initialize search params from URL on mount
@@ -54,21 +60,35 @@ function HomeContent() {
 
   // Fetch matches data (only when we have a profile with puuid)
   const {
-    data: matches,
+    data: matchesResponse,
     isLoading: isLoadingMatches,
     isError: isMatchesError,
   } = useMatches({
     puuid: profile?.puuid ?? "",
     region: searchParams?.region ?? "EUW",
-    count: 30,
     enabled: profile !== undefined && profile !== null,
   })
 
+  const initialMatches = matchesResponse?.matches ?? []
+
+  // Merge initial matches with any additionally loaded ones
+  const allMatches = useMemo(
+    () => [...initialMatches, ...extraMatches],
+    [initialMatches, extraMatches]
+  )
+
   // Process matches into sessions
   const sessions = useMemo(() => {
-    if (!matches || matches.length === 0) return []
-    return groupMatchesIntoSessions(matches)
-  }, [matches])
+    if (allMatches.length === 0) return []
+    return groupMatchesIntoSessions(allMatches)
+  }, [allMatches])
+
+  // Once initial matches load, use the API's hasMore to determine if more exist
+  useEffect(() => {
+    if (matchesResponse !== undefined) {
+      setHasMore(matchesResponse.hasMore)
+    }
+  }, [matchesResponse])
 
   // Set active session to first session when sessions are loaded
   useEffect(() => {
@@ -92,9 +112,32 @@ function HomeContent() {
   const hasNoData = !isLoading && !isError && (sessions.length === 0 || !profile)
   const showDashboard = !isLoading && !isError && profile && sessions.length > 0
 
+  // Load more matches starting from loadMoreStart offset
+  const handleLoadMore = useCallback(async () => {
+    if (!profile || !searchParams || isLoadingMore) return
+    setIsLoadingMore(true)
+    try {
+      const res = await fetch(
+        `/api/matches?puuid=${encodeURIComponent(profile.puuid)}&region=${searchParams.region}&start=${loadMoreStart}`
+      )
+      if (!res.ok) throw new Error("Failed to fetch")
+      const { matches: newMatches, hasMore: moreAvailable }: { matches: RankedMatch[], hasMore: boolean } = await res.json()
+      setExtraMatches((prev) => [...prev, ...newMatches])
+      setLoadMoreStart((prev) => prev + PAGE_SIZE)
+      setHasMore(moreAvailable)
+    } catch (err) {
+      console.error("[load more] Failed:", err)
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [profile, searchParams, loadMoreStart, isLoadingMore])
+
   const handleSearch = useCallback((gameName: string, tag: string, region: Region) => {
     setSearchParams({ gameName, tag, region })
     setActiveSessionId("")
+    setExtraMatches([])
+    setLoadMoreStart(PAGE_SIZE)
+    setHasMore(true)
     
     // Update URL with search params
     const params = new URLSearchParams({ gameName, tag, region })
@@ -104,6 +147,9 @@ function HomeContent() {
   const handleBack = useCallback(() => {
     setSearchParams(null)
     setActiveSessionId("")
+    setExtraMatches([])
+    setLoadMoreStart(PAGE_SIZE)
+    setHasMore(true)
     
     // Clear URL params
     router.push("/")
@@ -153,6 +199,25 @@ function HomeContent() {
                 activeSessionId={activeSession.id}
                 onSelectSession={setActiveSessionId}
               />
+              {hasMore && (
+                <button
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                  className="mt-2 w-full flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors py-2 lol-border rounded-lg hover:border-primary/30"
+                >
+                  {isLoadingMore ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span className="font-mono uppercase tracking-wider">Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3 w-3" />
+                      <span className="font-mono uppercase tracking-wider">Load more sessions</span>
+                    </>
+                  )}
+                </button>
+              )}
             </aside>
 
             {/* Main content */}

@@ -7,14 +7,15 @@ const VALID_REGIONS: Region[] = [
 ]
 
 const BATCH_SIZE = 5
-const BATCH_DELAY_MS = 100
+const BATCH_DELAY_MS = 750  // Dev key: API calls take ~500ms each, effective cadence ~1.25s/batch
+const PAGE_SIZE = 30        // Dev key: 30 matches = 6 batches ≈ 7-8s total load time
+const MAX_MATCHES = 30
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl
     const puuid = searchParams.get("puuid")
     const region = searchParams.get("region") as Region
-    const count = parseInt(searchParams.get("count") ?? "30", 10)
 
     if (!puuid || !region) {
       return NextResponse.json(
@@ -27,11 +28,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Invalid region" }, { status: 400 })
     }
 
-    // Step 1: Get match IDs (ranked only)
-    const matchIds = await getMatchIds(puuid, region, count)
+    // Step 1: Get match IDs for the requested page
+    const start = parseInt(searchParams.get("start") ?? "0", 10)
+    const matchIds = await getMatchIds(puuid, region, PAGE_SIZE, start)
+
+    // hasMore is true if Riot returned a full page of IDs (before any Solo/Duo filtering)
+    const hasMore = matchIds.length >= PAGE_SIZE
 
     if (matchIds.length === 0) {
-      return NextResponse.json([])
+      return NextResponse.json({ matches: [], hasMore: false })
     }
 
     // Step 2: Fetch and extract match details in batches
@@ -64,7 +69,7 @@ export async function GET(request: NextRequest) {
     // Return sorted newest-first
     matches.sort((a, b) => b.timestamp - a.timestamp)
 
-    return NextResponse.json(matches)
+    return NextResponse.json({ matches, hasMore })
   } catch (error) {
     console.error("[matches route]", error)
 

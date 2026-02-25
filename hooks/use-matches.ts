@@ -4,17 +4,22 @@ import type { Region, RankedMatch } from "@/types"
 interface UseMatchesParams {
   puuid: string
   region: Region
-  count?: number
+  start?: number
   enabled?: boolean
+}
+
+export interface MatchesResponse {
+  matches: RankedMatch[]
+  hasMore: boolean
 }
 
 async function fetchMatches({
   puuid,
   region,
-  count = 30,
-}: UseMatchesParams): Promise<RankedMatch[]> {
+  start = 0,
+}: UseMatchesParams): Promise<MatchesResponse> {
   const response = await fetch(
-    `/api/matches?puuid=${encodeURIComponent(puuid)}&region=${region}&count=${count}`
+    `/api/matches?puuid=${encodeURIComponent(puuid)}&region=${region}&start=${start}`
   )
 
   if (!response.ok) {
@@ -27,7 +32,7 @@ async function fetchMatches({
 
 export function useMatches(params: UseMatchesParams) {
   return useQuery({
-    queryKey: ["matches", params.puuid, params.region, params.count],
+    queryKey: ["matches", params.puuid, params.region, params.start ?? 0],
     queryFn: () => fetchMatches(params),
     enabled: params.enabled ?? false,
     retry: false,
