@@ -52,13 +52,13 @@ function MatchRow({ match, ddragonVersion }: { match: RankedMatch; ddragonVersio
     <div
       className={cn(
         "rounded-lg overflow-hidden transition-all hover:scale-[1.01] hover:shadow-lg",
-        match.win ? "lol-border" : "border border-loss/20 bg-card"
+        match.win ? "lol-border bg-win/5" : "border border-loss/30 bg-loss/5"
       )}
     >
       <div className="flex items-center gap-3 p-3">
         {/* Win/Loss indicator bar */}
         <div className={cn(
-          "w-1 self-stretch rounded-full shrink-0",
+          "w-1.5 self-stretch rounded-full shrink-0",
           match.win ? "bg-win" : "bg-loss"
         )} />
 
@@ -125,8 +125,14 @@ function MatchRow({ match, ddragonVersion }: { match: RankedMatch; ddragonVersio
           </div>
         </div>
 
-        {/* Duration + MVP marker for high KDA wins */}
+        {/* Duration + outcome label + MVP marker */}
         <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className={cn(
+            "text-[11px] font-bold uppercase tracking-widest font-mono",
+            match.win ? "text-win" : "text-loss"
+          )}>
+            {match.win ? "Victory" : "Defeat"}
+          </span>
           <span className="text-xs font-mono font-medium text-muted-foreground">
             {formatDuration(match.duration)}
           </span>
