@@ -8,6 +8,8 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 [![Recharts](https://img.shields.io/badge/Recharts-2.15-22B5BF)](https://recharts.org)
 
+> 📋 See what's coming next → [ROADMAP.md](./ROADMAP.md)
+
 ---
 
 ## Features
