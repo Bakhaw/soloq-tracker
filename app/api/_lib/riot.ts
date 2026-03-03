@@ -1,5 +1,49 @@
 import type { Region, RankedMatch, Role } from "@/types"
 
+// ─── Riot Match V5 API response types ───────────────────────────────
+
+interface RiotMatchParticipant {
+  puuid: string
+  championId: number
+  teamPosition: string
+  win: boolean
+  kills: number
+  deaths: number
+  assists: number
+  totalMinionsKilled: number
+  neutralMinionsKilled: number
+  gameEndedInEarlySurrender: boolean
+}
+
+interface RiotMatchInfo {
+  queueId: number
+  gameDuration: number
+  gameCreation: number
+  participants: RiotMatchParticipant[]
+}
+
+interface RiotMatchMetadata {
+  matchId: string
+}
+
+interface RiotMatchResponse {
+  metadata: RiotMatchMetadata
+  info: RiotMatchInfo
+}
+
+// ─── Data Dragon champion data types ────────────────────────────────
+
+interface DDragonChampionEntry {
+  key: string   // numeric champion ID as a string, e.g. "266"
+  id: string    // champion identifier, e.g. "Aatrox"
+}
+
+interface DDragonChampionResponse {
+  data: Record<string, DDragonChampionEntry>
+}
+
+// ─── Region mappings ────────────────────────────────────────────────
+
 // Region to platform code mapping (for Summoner V4, League V4)
 const REGION_TO_PLATFORM: Record<Region, string> = {
   EUW: "euw1",
@@ -186,16 +230,17 @@ export async function getMatchIds(
 export async function getMatchDetail(
   matchId: string,
   region: Region
-): Promise<any> {
+): Promise<RiotMatchResponse | null> {
   const apiKey = getApiKey()
   const url = `${getRegionalApiUrl(region)}/lol/match/v5/matches/${matchId}`
 
   try {
     const response = await riotFetch(url, apiKey)
-    return response.json()
-  } catch (err: any) {
+    return response.json() as Promise<RiotMatchResponse>
+  } catch (err: unknown) {
     // 404 for a single match is non-fatal — skip it
-    if (err.message === "Summoner not found" || err.message?.includes("404")) {
+    const message = err instanceof Error ? err.message : ""
+    if (message === "Summoner not found" || message.includes("404")) {
       return null
     }
     throw err
@@ -225,11 +270,10 @@ async function getChampionIdToNameMap(): Promise<Record<number, string>> {
     const championResponse = await fetch(
       `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`
     )
-    const championData = await championResponse.json()
+    const championData: DDragonChampionResponse = await championResponse.json()
 
     const mapping: Record<number, string> = {}
-    for (const championInfo of Object.values(championData.data)) {
-      const champ = championInfo as { key: string; id: string }
+    for (const champ of Object.values(championData.data)) {
       const championId = parseInt(champ.key, 10)
       if (!isNaN(championId)) {
         mapping[championId] = champ.id
@@ -247,7 +291,7 @@ async function getChampionIdToNameMap(): Promise<Record<number, string>> {
 // Process match data and extract the relevant participant's stats
 // Only processes Solo/Duo ranked games (queueId 420)
 export async function extractMatchData(
-  matchData: any,
+  matchData: RiotMatchResponse,
   puuid: string
 ): Promise<RankedMatch | null> {
   if (!matchData?.info) return null
@@ -264,7 +308,7 @@ export async function extractMatchData(
   if (!Array.isArray(participants)) return null
 
   // Match V5: participant puuid is directly on each participant object
-  const participant = participants.find((p: any) => p.puuid === puuid)
+  const participant = participants.find((p) => p.puuid === puuid)
   if (!participant) {
     console.error("[extractMatchData] Participant not found for puuid:", puuid)
     return null
