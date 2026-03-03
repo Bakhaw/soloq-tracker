@@ -14,6 +14,7 @@ import { WinrateChart } from "@/components/winrate-chart"
 import { SessionHistory } from "@/components/session-history"
 import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 import { EmptyState } from "@/components/empty-state"
+import { RecentSearches } from "@/components/recent-searches"
 import { ArrowLeft, Swords, Shield, ChevronDown, Loader2 } from "lucide-react"
 
 const PAGE_SIZE = 30
@@ -33,7 +34,7 @@ function HomeContent() {
   const [loadMoreStart, setLoadMoreStart] = useState(PAGE_SIZE)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
-  const { addToHistory } = useSummonerHistory()
+  const { addToHistory, history, removeFromHistory } = useSummonerHistory()
 
   // Initialize search params from URL on mount
   useEffect(() => {
@@ -158,8 +159,13 @@ function HomeContent() {
   return (
     <main className="min-h-screen">
       {!searchParams && (
-        <div className="container mx-auto px-4 max-w-lg">
+        <div className="container mx-auto px-4 max-w-lg flex flex-col items-center gap-6">
           <SummonerSearch onSearch={handleSearch} isLoading={false} />
+          <RecentSearches
+            history={history}
+            onSelect={handleSearch}
+            onRemove={removeFromHistory}
+          />
         </div>
       )}
 

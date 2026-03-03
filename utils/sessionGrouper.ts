@@ -32,8 +32,10 @@ export function groupMatchesIntoSessions(matches: RankedMatch[]): Session[] {
 }
 
 function buildSession(matches: RankedMatch[], index: number): Session {
-  const wins = matches.filter((m) => m.win).length
-  const losses = matches.length - wins
+  const countableMatches = matches.filter((m) => !m.remake)
+  const wins = countableMatches.filter((m) => m.win).length
+  const losses = countableMatches.length - wins
+  const remakes = matches.length - countableMatches.length
   const date = new Date(matches[0].timestamp).toISOString().split("T")[0]
 
   return {
@@ -43,16 +45,21 @@ function buildSession(matches: RankedMatch[], index: number): Session {
     totalGames: matches.length,
     wins,
     losses,
-    winRate: matches.length > 0 ? Math.round((wins / matches.length) * 100) : 0,
+    remakes,
+    winRate: countableMatches.length > 0 ? Math.round((wins / countableMatches.length) * 100) : 0,
   }
 }
 
 export function getSessionStats(session: Session) {
-  const totalKills = session.matches.reduce((sum, m) => sum + m.kills, 0)
-  const totalDeaths = session.matches.reduce((sum, m) => sum + m.deaths, 0)
-  const totalAssists = session.matches.reduce((sum, m) => sum + m.assists, 0)
-  const totalPlaytime = session.matches.reduce((sum, m) => sum + m.duration, 0)
-  const totalCS = session.matches.reduce((sum, m) => sum + m.cs, 0)
+  // Exclude remakes from stats to avoid skewing averages with near-zero-stat games
+  const countableMatches = session.matches.filter((m) => !m.remake)
+  const baseMatches = countableMatches.length > 0 ? countableMatches : session.matches
+
+  const totalKills = baseMatches.reduce((sum, m) => sum + m.kills, 0)
+  const totalDeaths = baseMatches.reduce((sum, m) => sum + m.deaths, 0)
+  const totalAssists = baseMatches.reduce((sum, m) => sum + m.assists, 0)
+  const totalPlaytime = baseMatches.reduce((sum, m) => sum + m.duration, 0)
+  const totalCS = baseMatches.reduce((sum, m) => sum + m.cs, 0)
 
   const kda = totalDeaths === 0
     ? `${(totalKills + totalAssists).toFixed(1)} Perfect`
@@ -64,7 +71,7 @@ export function getSessionStats(session: Session) {
     totalDeaths,
     totalAssists,
     totalPlaytime,
-    averageCS: Math.round(totalCS / session.matches.length),
+    averageCS: Math.round(totalCS / baseMatches.length),
   }
 }
 

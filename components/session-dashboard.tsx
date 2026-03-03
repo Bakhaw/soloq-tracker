@@ -19,10 +19,12 @@ function getSessionMood(winRate: number): { label: string; icon: React.ReactNode
 }
 
 function getStreakInfo(matches: Session["matches"]): { type: "win" | "loss" | "none"; count: number } {
-  if (matches.length === 0) return { type: "none", count: 0 }
-  const first = matches[0].win
+  // Skip remakes when computing streaks — they don't count as wins or losses
+  const countableMatches = matches.filter((m) => !m.remake)
+  if (countableMatches.length === 0) return { type: "none", count: 0 }
+  const first = countableMatches[0].win
   let count = 0
-  for (const m of matches) {
+  for (const m of countableMatches) {
     if (m.win === first) count++
     else break
   }
@@ -110,7 +112,10 @@ export function SessionDashboard({ session, profile }: SessionDashboardProps) {
             />
           </div>
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>{session.wins}W - {session.losses}L</span>
+            <span>
+              {session.wins}W - {session.losses}L
+              {session.remakes > 0 && <span className="text-remake-foreground/70"> · {session.remakes}R</span>}
+            </span>
             <span>{session.totalGames} games played</span>
           </div>
         </div>
@@ -133,6 +138,7 @@ export function SessionDashboard({ session, profile }: SessionDashboardProps) {
           icon={<Trophy className="h-4 w-4 text-primary" />}
           label="Record"
           value={`${session.wins}W ${session.losses}L`}
+          sub={session.remakes > 0 ? `${session.remakes} remake${session.remakes > 1 ? "s" : ""}` : undefined}
         />
         <GameStatCard
           icon={<Target className="h-4 w-4 text-primary" />}

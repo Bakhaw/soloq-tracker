@@ -58,6 +58,7 @@ export function SessionHistory({
                     </p>
                     <p className="text-[10px] text-muted-foreground font-mono">
                       {session.totalGames} games &middot; {session.wins}W {session.losses}L
+                      {session.remakes > 0 && <span className="text-remake-foreground/70"> {session.remakes}R</span>}
                     </p>
                   </div>
                 </div>

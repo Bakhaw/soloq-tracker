@@ -6,7 +6,7 @@ import { formatDuration } from "@/utils/sessionGrouper"
 import { getChampionIconUrl, getRoleIcon, getRoleColor } from "@/utils/champions"
 import { useDdragonVersion } from "@/hooks/use-ddragon-version"
 import { cn } from "@/lib/utils"
-import { Swords, Crown, Skull, Flame } from "lucide-react"
+import { Swords, Crown, Skull, Flame, RotateCcw } from "lucide-react"
 
 interface MatchListProps {
   matches: RankedMatch[]
@@ -46,39 +46,48 @@ function MatchRow({ match, ddragonVersion }: { match: RankedMatch; ddragonVersio
     match.deaths === 0
       ? match.kills + match.assists
       : (match.kills + match.assists) / match.deaths
-  const kdaLabel = getKDALabel(match.kills, match.deaths, match.assists)
+  // Don't show KDA performance badges for remakes
+  const kdaLabel = match.remake ? null : getKDALabel(match.kills, match.deaths, match.assists)
+
+  const isRemake = match.remake
 
   return (
     <div
       className={cn(
         "rounded-lg overflow-hidden transition-all hover:scale-[1.01] hover:shadow-lg",
-        match.win ? "lol-border bg-win/5" : "border border-loss/30 bg-loss/5"
+        isRemake
+          ? "border border-remake/30 bg-remake/5"
+          : match.win
+          ? "lol-border bg-win/5"
+          : "border border-loss/30 bg-loss/5"
       )}
     >
       <div className="flex items-center gap-3 p-3">
-        {/* Win/Loss indicator bar */}
+        {/* Win/Loss/Remake indicator bar */}
         <div className={cn(
           "w-1.5 self-stretch rounded-full shrink-0",
-          match.win ? "bg-win" : "bg-loss"
+          isRemake ? "bg-remake/60" : match.win ? "bg-win" : "bg-loss"
         )} />
 
         {/* Champion icon with ring */}
         <div className={cn(
           "relative h-11 w-11 shrink-0 rounded-lg overflow-hidden ring-2",
-          match.win ? "ring-win/50" : "ring-loss/50"
+          isRemake ? "ring-remake/40" : match.win ? "ring-win/50" : "ring-loss/50"
         )}>
           <img
             src={getChampionIconUrl(match.champion, ddragonVersion)}
             alt={match.champion}
-            className="h-full w-full object-cover"
+            className={cn("h-full w-full object-cover", isRemake && "opacity-60 grayscale")}
             crossOrigin="anonymous"
           />
           {/* Outcome icon overlay */}
           <div className={cn(
             "absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full flex items-center justify-center",
-            match.win ? "bg-win" : "bg-loss"
+            isRemake ? "bg-remake/80" : match.win ? "bg-win" : "bg-loss"
           )}>
-            {match.win ? (
+            {isRemake ? (
+              <RotateCcw className="h-2.5 w-2.5 text-remake-foreground" />
+            ) : match.win ? (
               <Crown className="h-2.5 w-2.5 text-win-foreground" />
             ) : (
               <Skull className="h-2.5 w-2.5 text-loss-foreground" />
@@ -89,7 +98,10 @@ function MatchRow({ match, ddragonVersion }: { match: RankedMatch; ddragonVersio
         {/* Champion name + KDA + role */}
         <div className="flex flex-col gap-0.5 min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-foreground truncate">
+            <span className={cn(
+              "text-sm font-semibold truncate",
+              isRemake ? "text-muted-foreground" : "text-foreground"
+            )}>
               {match.champion}
             </span>
             {kdaLabel && (
@@ -102,12 +114,19 @@ function MatchRow({ match, ddragonVersion }: { match: RankedMatch; ddragonVersio
                 {kdaLabel.label}
               </Badge>
             )}
+            {isRemake && (
+              <Badge className="text-[9px] px-1.5 py-0 h-4 border font-bold uppercase tracking-wider shrink-0 text-remake-foreground bg-remake/15 border-remake/30">
+                Remake
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span
               className={cn(
                 "font-mono font-semibold",
-                kdaRatio >= 4
+                isRemake
+                  ? "text-muted-foreground/60"
+                  : kdaRatio >= 4
                   ? "text-win"
                   : kdaRatio >= 2
                   ? "text-foreground"
@@ -117,11 +136,11 @@ function MatchRow({ match, ddragonVersion }: { match: RankedMatch; ddragonVersio
               {kda}
             </span>
             <span className="text-border">|</span>
-            <span className={cn("font-medium", getRoleColor(match.role))}>
+            <span className={cn("font-medium", isRemake ? "text-muted-foreground/60" : getRoleColor(match.role))}>
               {getRoleIcon(match.role)}
             </span>
             <span className="text-border">|</span>
-            <span className="font-mono">{match.cs} CS</span>
+            <span className={cn("font-mono", isRemake && "text-muted-foreground/60")}>{match.cs} CS</span>
           </div>
         </div>
 
@@ -129,14 +148,14 @@ function MatchRow({ match, ddragonVersion }: { match: RankedMatch; ddragonVersio
         <div className="flex flex-col items-end gap-1 shrink-0">
           <span className={cn(
             "text-[11px] font-bold uppercase tracking-widest font-mono",
-            match.win ? "text-win" : "text-loss"
+            isRemake ? "text-remake-foreground/80" : match.win ? "text-win" : "text-loss"
           )}>
-            {match.win ? "Victory" : "Defeat"}
+            {isRemake ? "Remake" : match.win ? "Victory" : "Defeat"}
           </span>
           <span className="text-xs font-mono font-medium text-muted-foreground">
             {formatDuration(match.duration)}
           </span>
-          {match.win && kdaRatio >= 4 && (
+          {!isRemake && match.win && kdaRatio >= 4 && (
             <div className="flex items-center gap-0.5">
               <Flame className="h-3 w-3 text-primary animate-streak-fire" />
               <span className="text-[9px] font-bold text-primary uppercase">MVP</span>

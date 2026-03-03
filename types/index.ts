@@ -13,6 +13,7 @@ export interface RankedMatch {
   duration: number // in seconds
   role: Role
   cs: number
+  remake: boolean
 }
 
 export interface Session {
@@ -22,6 +23,7 @@ export interface Session {
   totalGames: number
   wins: number
   losses: number
+  remakes: number
   winRate: number
 }
 

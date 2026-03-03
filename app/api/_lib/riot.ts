@@ -279,7 +279,11 @@ export async function extractMatchData(
     assists,
     totalMinionsKilled,
     neutralMinionsKilled,
+    gameEndedInEarlySurrender,
   } = participant
+
+  // A remake is an early surrender that happened before ~3 min (we use 300s as the safe threshold)
+  const remake = gameEndedInEarlySurrender === true && gameDuration < 300
 
   const championMap = await getChampionIdToNameMap()
   const champion = championMap[championId] || `Champion${championId}`
@@ -298,5 +302,6 @@ export async function extractMatchData(
     duration: gameDuration,
     role: mapTeamPositionToRole(teamPosition || "MIDDLE"),
     cs: (totalMinionsKilled || 0) + (neutralMinionsKilled || 0),
+    remake,
   }
 }
