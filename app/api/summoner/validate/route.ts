@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     if (!gameName || !tag || !region) {
       return NextResponse.json(
-        { error: "Missing required parameters" },
+        { error: "Missing required parameters: gameName, tag, region" },
         { status: 400 }
       )
     }
