@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import type { Region, SummonerProfile } from "@/types"
+import { VALID_REGIONS, extractSoloDuoRank } from "@/utils/ranked"
 import {
   getAccountByRiotId,
   getSummonerByPuuid,
   getRankedEntries,
 } from "../_lib/riot"
-
-const VALID_REGIONS: Region[] = [
-  "EUW", "EUNE", "NA", "KR", "JP", "BR", "LAN", "LAS", "OCE", "TR", "RU",
-]
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,33 +32,15 @@ export async function GET(request: NextRequest) {
     const summoner = await getSummonerByPuuid(account.puuid, region)
 
     // Step 3: Get ranked entries — non-fatal if it fails
-    let rank = "Unranked"
-    let lp = 0
-    let tier: string | undefined
-    let division: string | undefined
-    let rankedWins: number | undefined
-    let rankedLosses: number | undefined
+    let ranked = extractSoloDuoRank([])
 
     try {
       const rankedEntries = await getRankedEntries(account.puuid, region)
-      const soloDuo = rankedEntries.find((e) => e.queueType === "RANKED_SOLO_5x5")
-
-      if (soloDuo) {
-        tier = soloDuo.tier
-        division = soloDuo.rank
-        lp = soloDuo.leaguePoints
-        rankedWins = soloDuo.wins
-        rankedLosses = soloDuo.losses
-        rank =
-          tier === "MASTER" || tier === "GRANDMASTER" || tier === "CHALLENGER"
-            ? tier
-            : `${tier} ${division}`
-      }
+      ranked = extractSoloDuoRank(rankedEntries)
     } catch (rankedError) {
       console.warn("[summoner route] Ranked entries failed, defaulting to Unranked:", rankedError)
     }
 
-    // Use Riot ID as display name (summoner.name is deprecated in new accounts)
     const displayName = account.gameName
       ? `${account.gameName}#${account.tagLine}`
       : summoner.name
@@ -70,14 +49,9 @@ export async function GET(request: NextRequest) {
       name: displayName,
       region,
       level: summoner.summonerLevel,
-      rank,
-      lp,
       puuid: account.puuid,
       profileIconId: summoner.profileIconId,
-      tier,
-      division,
-      rankedWins,
-      rankedLosses,
+      ...ranked,
     }
 
     return NextResponse.json(profile)

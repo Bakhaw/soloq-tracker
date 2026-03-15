@@ -3,9 +3,8 @@
 import { X, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useDdragonVersion } from "@/hooks/use-ddragon-version"
+import { getRankEmblemUrl, getProfileIconUrl } from "@/utils/ddragon"
 import type { SummonerHistoryEntry, Region } from "@/types"
-
-const RANK_EMBLEM_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests"
 
 interface RecentSearchesProps {
   history: SummonerHistoryEntry[]
@@ -40,9 +39,7 @@ export function RecentSearches({ history, onSelect, onRemove }: RecentSearchesPr
 
       <div className="flex flex-col gap-1.5">
         {history.map((entry) => {
-          const iconUrl = ddragonVersion
-            ? `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${entry.profileIconId}.png`
-            : null
+          const iconUrl = getProfileIconUrl(entry.profileIconId, ddragonVersion)
 
           return (
             <div
@@ -83,14 +80,12 @@ export function RecentSearches({ history, onSelect, onRemove }: RecentSearchesPr
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1 mt-0.5">
-                  {entry.tier && (
-                    <img
-                      src={`${RANK_EMBLEM_BASE}/${entry.tier.toLowerCase()}.svg`}
-                      alt={entry.rank}
-                      className="h-4 w-4 object-contain"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
-                    />
-                  )}
+                  <img
+                    src={getRankEmblemUrl(entry.tier)}
+                    alt={entry.rank}
+                    className="h-4 w-4 object-contain"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
+                  />
                   <span className="text-[11px] text-muted-foreground font-mono">
                     {entry.rank} &middot; {entry.lp} LP
                   </span>

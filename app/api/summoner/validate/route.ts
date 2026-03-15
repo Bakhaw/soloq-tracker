@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import type { Region } from "@/types"
+import { VALID_REGIONS, extractSoloDuoRank } from "@/utils/ranked"
 import {
   getAccountByRiotId,
   getSummonerByPuuid,
   getRankedEntries,
 } from "../../_lib/riot"
-
-const VALID_REGIONS: Region[] = [
-  "EUW", "EUNE", "NA", "KR", "JP", "BR", "LAN", "LAS", "OCE", "TR", "RU",
-]
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,29 +29,11 @@ export async function GET(request: NextRequest) {
     const account = await getAccountByRiotId(gameName, tag, region)
     const summoner = await getSummonerByPuuid(account.puuid, region)
 
-    // Get ranked info (optional)
-    let rank = "Unranked"
-    let lp = 0
-    let tier: string | undefined
-    let division: string | undefined
-    let rankedWins: number | undefined
-    let rankedLosses: number | undefined
+    let ranked = extractSoloDuoRank([])
 
     try {
       const rankedEntries = await getRankedEntries(account.puuid, region)
-      const soloDuo = rankedEntries.find((e) => e.queueType === "RANKED_SOLO_5x5")
-
-      if (soloDuo) {
-        tier = soloDuo.tier
-        division = soloDuo.rank
-        lp = soloDuo.leaguePoints
-        rankedWins = soloDuo.wins
-        rankedLosses = soloDuo.losses
-        rank =
-          tier === "MASTER" || tier === "GRANDMASTER" || tier === "CHALLENGER"
-            ? tier
-            : `${tier} ${division}`
-      }
+      ranked = extractSoloDuoRank(rankedEntries)
     } catch {
       // Ranked data optional
     }
@@ -63,14 +42,9 @@ export async function GET(request: NextRequest) {
       gameName: account.gameName,
       tag: account.tagLine,
       region,
-      rank,
-      lp,
       level: summoner.summonerLevel,
       profileIconId: summoner.profileIconId,
-      tier,
-      division,
-      rankedWins,
-      rankedLosses,
+      ...ranked,
       valid: true,
     })
   } catch (error) {

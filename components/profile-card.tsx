@@ -3,14 +3,8 @@
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { useDdragonVersion } from "@/hooks/use-ddragon-version"
+import { getRankEmblemUrl, getProfileIconUrl } from "@/utils/ddragon"
 import type { SummonerProfile } from "@/types"
-
-const RANK_EMBLEM_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests"
-
-function getRankEmblemUrl(tier?: string): string {
-  if (!tier) return `${RANK_EMBLEM_BASE}/unranked.svg`
-  return `${RANK_EMBLEM_BASE}/${tier.toLowerCase()}.svg`
-}
 
 interface ProfileCardProps {
   profile: SummonerProfile
@@ -20,9 +14,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
   const { data: ddragonVersion } = useDdragonVersion()
   const isRanked = profile.rank !== "Unranked"
 
-  const profileIconUrl = ddragonVersion
-    ? `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${profile.profileIconId}.png`
-    : null
+  const profileIconUrl = getProfileIconUrl(profile.profileIconId, ddragonVersion)
 
   return (
     <div className="lol-border rounded-lg p-4 animate-slide-up">

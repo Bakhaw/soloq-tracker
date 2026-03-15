@@ -104,16 +104,12 @@ function getApiKey(): string {
 }
 
 // Riot API base URLs
-function getAccountApiUrl(region: Region): string {
+function getRoutingApiUrl(region: Region): string {
   return `https://${REGION_TO_ROUTING[region]}.api.riotgames.com`
 }
 
 function getPlatformApiUrl(region: Region): string {
   return `https://${REGION_TO_PLATFORM[region]}.api.riotgames.com`
-}
-
-function getRegionalApiUrl(region: Region): string {
-  return `https://${REGION_TO_ROUTING[region]}.api.riotgames.com`
 }
 
 // Helper: make a Riot API request with proper error handling and automatic retry on 429
@@ -166,7 +162,7 @@ export async function getAccountByRiotId(
   region: Region
 ): Promise<{ puuid: string; gameName: string; tagLine: string }> {
   const apiKey = getApiKey()
-  const baseUrl = getAccountApiUrl(region)
+  const baseUrl = getRoutingApiUrl(region)
   const url = `${baseUrl}/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`
   const response = await riotFetch(url, apiKey)
   return response.json()
@@ -221,7 +217,7 @@ export async function getMatchIds(
   start: number = 0
 ): Promise<string[]> {
   const apiKey = getApiKey()
-  const url = `${getRegionalApiUrl(region)}/lol/match/v5/matches/by-puuid/${puuid}/ids?type=ranked&start=${start}&count=${count}`
+  const url = `${getRoutingApiUrl(region)}/lol/match/v5/matches/by-puuid/${puuid}/ids?type=ranked&start=${start}&count=${count}`
   const response = await riotFetch(url, apiKey)
   return response.json()
 }
@@ -232,7 +228,7 @@ export async function getMatchDetail(
   region: Region
 ): Promise<RiotMatchResponse | null> {
   const apiKey = getApiKey()
-  const url = `${getRegionalApiUrl(region)}/lol/match/v5/matches/${matchId}`
+  const url = `${getRoutingApiUrl(region)}/lol/match/v5/matches/${matchId}`
 
   try {
     const response = await riotFetch(url, apiKey)
