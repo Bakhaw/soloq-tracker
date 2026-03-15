@@ -1,4 +1,5 @@
 import type { Region, RankedMatch, Role } from "@/types"
+import { SOLO_DUO_QUEUE_ID, REMAKE_THRESHOLD_SECONDS } from "@/utils/constants"
 
 // ─── Riot Match V5 API response types ───────────────────────────────
 
@@ -285,18 +286,15 @@ async function getChampionIdToNameMap(): Promise<Record<number, string>> {
 }
 
 // Process match data and extract the relevant participant's stats
-// Only processes Solo/Duo ranked games (queueId 420)
+// Only processes Solo/Duo ranked games
 export async function extractMatchData(
   matchData: RiotMatchResponse,
   puuid: string
 ): Promise<RankedMatch | null> {
   if (!matchData?.info) return null
 
-  // Filter: Only Solo/Duo ranked (queueId 420)
-  // Flex ranked is 440, other queues are different
-  const queueId = matchData.info.queueId
-  if (queueId !== 420) {
-    return null // Skip non-Solo/Duo ranked games
+  if (matchData.info.queueId !== SOLO_DUO_QUEUE_ID) {
+    return null
   }
 
   const { participants, gameDuration, gameCreation } = matchData.info
@@ -322,8 +320,7 @@ export async function extractMatchData(
     gameEndedInEarlySurrender,
   } = participant
 
-  // A remake is an early surrender that happened before ~3 min (we use 300s as the safe threshold)
-  const remake = gameEndedInEarlySurrender === true && gameDuration < 300
+  const remake = gameEndedInEarlySurrender === true && gameDuration < REMAKE_THRESHOLD_SECONDS
 
   const championMap = await getChampionIdToNameMap()
   const champion = championMap[championId] || `Champion${championId}`

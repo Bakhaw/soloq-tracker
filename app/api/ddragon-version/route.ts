@@ -1,5 +1,6 @@
-    import { NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getLatestDdragonVersion } from "@/app/api/_lib/riot"
+import { DDRAGON_FALLBACK_VERSION } from "@/utils/constants"
 
 export async function GET() {
   try {
@@ -7,7 +8,6 @@ export async function GET() {
     return NextResponse.json({ version })
   } catch (error) {
     console.error("[ddragon-version] Failed to fetch version:", error)
-    // Return a known stable fallback so images don't fully break
-    return NextResponse.json({ version: "15.1.1" })
+    return NextResponse.json({ version: DDRAGON_FALLBACK_VERSION })
   }
 }

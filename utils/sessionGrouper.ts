@@ -1,6 +1,5 @@
 import type { RankedMatch, Session } from "@/types"
-
-const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000
+import { SESSION_GAP_MS } from "@/utils/constants"
 
 export function groupMatchesIntoSessions(matches: RankedMatch[]): Session[] {
   if (matches.length === 0) return []
@@ -14,7 +13,7 @@ export function groupMatchesIntoSessions(matches: RankedMatch[]): Session[] {
   for (let i = 1; i < sorted.length; i++) {
     const timeDiff = currentSessionMatches[currentSessionMatches.length - 1].timestamp - sorted[i].timestamp
 
-    if (timeDiff > EIGHT_HOURS_MS) {
+    if (timeDiff > SESSION_GAP_MS) {
       // Start a new session
       sessions.push(buildSession(currentSessionMatches, sessions.length))
       currentSessionMatches = [sorted[i]]

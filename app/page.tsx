@@ -17,8 +17,7 @@ import { DashboardSkeleton } from "@/components/dashboard-skeleton"
 import { EmptyState } from "@/components/empty-state"
 import { RecentSearches } from "@/components/recent-searches"
 import { ArrowLeft, Swords, Shield, ChevronDown, Loader2 } from "lucide-react"
-
-const PAGE_SIZE = 30
+import { PAGE_SIZE } from "@/utils/constants"
 
 interface SearchParams {
   gameName: string

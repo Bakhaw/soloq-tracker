@@ -3,8 +3,10 @@
 import { Badge } from "@/components/ui/badge"
 import type { RankedMatch } from "@/types"
 import { formatDuration } from "@/utils/sessionGrouper"
-import { getChampionIconUrl, getRoleIcon, getRoleColor } from "@/utils/champions"
+import { getRoleLabel, getRoleColor } from "@/utils/champions"
+import { getChampionIconUrl } from "@/utils/ddragon"
 import { useDdragonVersion } from "@/hooks/use-ddragon-version"
+import { DDRAGON_FALLBACK_VERSION } from "@/utils/constants"
 import { cn } from "@/lib/utils"
 import { Swords, Crown, Skull, Flame, RotateCcw } from "lucide-react"
 
@@ -22,7 +24,7 @@ function getKDALabel(kills: number, deaths: number, assists: number): { label: s
 }
 
 export function MatchList({ matches }: MatchListProps) {
-  const { data: ddragonVersion = "15.1.1" } = useDdragonVersion()
+  const { data: ddragonVersion = DDRAGON_FALLBACK_VERSION } = useDdragonVersion()
 
   return (
     <div className="flex flex-col gap-2">
@@ -137,7 +139,7 @@ function MatchRow({ match, ddragonVersion }: { match: RankedMatch; ddragonVersio
             </span>
             <span className="text-border">|</span>
             <span className={cn("font-medium", isRemake ? "text-muted-foreground/60" : getRoleColor(match.role))}>
-              {getRoleIcon(match.role)}
+              {getRoleLabel(match.role)}
             </span>
             <span className="text-border">|</span>
             <span className={cn("font-mono", isRemake && "text-muted-foreground/60")}>{match.cs} CS</span>

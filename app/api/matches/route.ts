@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import type { Region, RankedMatch } from "@/types"
+import { VALID_REGIONS } from "@/utils/ranked"
+import { PAGE_SIZE, BATCH_SIZE, BATCH_DELAY_MS } from "@/utils/constants"
 import { getMatchIds, getMatchDetail, extractMatchData } from "../_lib/riot"
-
-const VALID_REGIONS: Region[] = [
-  "EUW", "EUNE", "NA", "KR", "JP", "BR", "LAN", "LAS", "OCE", "TR", "RU",
-]
-
-const BATCH_SIZE = 5
-const BATCH_DELAY_MS = 750  // Dev key: API calls take ~500ms each, effective cadence ~1.25s/batch
-const PAGE_SIZE = 30        // Dev key: 30 matches = 6 batches ≈ 7-8s total load time
-const MAX_MATCHES = 30
 
 export async function GET(request: NextRequest) {
   try {
