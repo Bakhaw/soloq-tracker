@@ -12,20 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Region } from "@/types"
+import { VALID_REGIONS } from "@/utils/ranked"
 
-const REGIONS: { value: Region; label: string }[] = [
-  { value: "EUW", label: "EUW" },
-  { value: "EUNE", label: "EUNE" },
-  { value: "NA", label: "NA" },
-  { value: "KR", label: "KR" },
-  { value: "JP", label: "JP" },
-  { value: "BR", label: "BR" },
-  { value: "LAN", label: "LAN" },
-  { value: "LAS", label: "LAS" },
-  { value: "OCE", label: "OCE" },
-  { value: "TR", label: "TR" },
-  { value: "RU", label: "RU" },
-]
+const REGIONS = VALID_REGIONS.map((r) => ({ value: r, label: r }))
 
 interface SummonerSearchProps {
   onSearch: (gameName: string, tag: string, region: Region) => void

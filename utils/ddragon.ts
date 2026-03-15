@@ -13,3 +13,7 @@ export function getProfileIconUrl(
   if (!ddragonVersion) return null
   return `https://ddragon.leagueoflegends.com/cdn/${ddragonVersion}/img/profileicon/${profileIconId}.png`
 }
+
+export function getChampionIconUrl(championName: string, version: string): string {
+  return `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${championName}.png`
+}
