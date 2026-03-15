@@ -191,9 +191,9 @@ export async function getSummonerByPuuid(
   return response.json()
 }
 
-// League V4: Get ranked entries by summoner ID
+// League V4: Get ranked entries by PUUID
 export async function getRankedEntries(
-  summonerId: string,
+  puuid: string,
   region: Region
 ): Promise<
   Array<{
@@ -201,14 +201,14 @@ export async function getRankedEntries(
     queueType: string
     tier: string
     rank: string
-    summonerId: string
+    puuid: string
     leaguePoints: number
     wins: number
     losses: number
   }>
 > {
   const apiKey = getApiKey()
-  const url = `${getPlatformApiUrl(region)}/lol/league/v4/entries/by-summoner/${summonerId}`
+  const url = `${getPlatformApiUrl(region)}/lol/league/v4/entries/by-puuid/${puuid}`
   const response = await riotFetch(url, apiKey)
   return response.json()
 }

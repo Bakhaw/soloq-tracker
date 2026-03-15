@@ -8,6 +8,7 @@ import { useSummoner } from "@/hooks/use-summoner"
 import { useMatches } from "@/hooks/use-matches"
 import { useSummonerHistory } from "@/hooks/use-summoner-history"
 import { SummonerSearch } from "@/components/summoner-search"
+import { ProfileCard } from "@/components/profile-card"
 import { SessionDashboard } from "@/components/session-dashboard"
 import { MatchList } from "@/components/match-list"
 import { WinrateChart } from "@/components/winrate-chart"
@@ -196,6 +197,11 @@ function HomeContent() {
             </div>
           </div>
 
+          {/* Profile card — always visible, independent of session */}
+          <div className="mb-6">
+            <ProfileCard profile={profile} />
+          </div>
+
           {/* Main layout: sidebar + content */}
           <div className="flex flex-col gap-6 lg:flex-row">
             {/* Sidebar - Session History */}
@@ -228,10 +234,7 @@ function HomeContent() {
 
             {/* Main content */}
             <div className="flex-1 flex flex-col gap-5 order-1 lg:order-2 min-w-0">
-              <SessionDashboard
-                session={activeSession}
-                profile={profile}
-              />
+              <SessionDashboard session={activeSession} />
 
               {/* Win rate chart */}
               {sessions.length > 1 && (

@@ -50,7 +50,6 @@ export function useSummonerHistory() {
             )
         )
 
-        // Create new entry
         const newEntry: SummonerHistoryEntry = {
           gameName,
           tag,
@@ -60,6 +59,10 @@ export function useSummonerHistory() {
           level: profile.level,
           profileIconId: profile.profileIconId,
           lastSearched: Date.now(),
+          tier: profile.tier,
+          division: profile.division,
+          rankedWins: profile.rankedWins,
+          rankedLosses: profile.rankedLosses,
         }
 
         // Add to front and limit to MAX_ENTRIES

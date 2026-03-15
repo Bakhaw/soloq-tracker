@@ -41,6 +41,10 @@ export interface SummonerProfile {
   lp: number
   puuid: string
   profileIconId: number
+  tier?: string
+  division?: string
+  rankedWins?: number
+  rankedLosses?: number
 }
 
 export interface SummonerHistoryEntry {
@@ -52,4 +56,8 @@ export interface SummonerHistoryEntry {
   level: number
   profileIconId: number
   lastSearched: number // Date.now()
+  tier?: string
+  division?: string
+  rankedWins?: number
+  rankedLosses?: number
 }

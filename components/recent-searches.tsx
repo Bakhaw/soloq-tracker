@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { useDdragonVersion } from "@/hooks/use-ddragon-version"
 import type { SummonerHistoryEntry, Region } from "@/types"
 
+const RANK_EMBLEM_BASE = "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests"
+
 interface RecentSearchesProps {
   history: SummonerHistoryEntry[]
   onSelect: (gameName: string, tag: string, region: Region) => void
@@ -80,9 +82,19 @@ export function RecentSearches({ history, onSelect, onRemove }: RecentSearchesPr
                     {entry.region}
                   </Badge>
                 </div>
-                <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
-                  {entry.rank} &middot; {entry.lp} LP
-                </p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  {entry.tier && (
+                    <img
+                      src={`${RANK_EMBLEM_BASE}/${entry.tier.toLowerCase()}.svg`}
+                      alt={entry.rank}
+                      className="h-4 w-4 object-contain"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none" }}
+                    />
+                  )}
+                  <span className="text-[11px] text-muted-foreground font-mono">
+                    {entry.rank} &middot; {entry.lp} LP
+                  </span>
+                </div>
               </div>
 
               {/* Timestamp + remove */}

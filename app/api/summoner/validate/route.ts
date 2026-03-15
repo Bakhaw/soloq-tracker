@@ -35,18 +35,25 @@ export async function GET(request: NextRequest) {
     // Get ranked info (optional)
     let rank = "Unranked"
     let lp = 0
+    let tier: string | undefined
+    let division: string | undefined
+    let rankedWins: number | undefined
+    let rankedLosses: number | undefined
 
     try {
-      const rankedEntries = await getRankedEntries(summoner.id, region)
+      const rankedEntries = await getRankedEntries(account.puuid, region)
       const soloDuo = rankedEntries.find((e) => e.queueType === "RANKED_SOLO_5x5")
 
       if (soloDuo) {
-        const { tier, rank: rankTier, leaguePoints } = soloDuo
+        tier = soloDuo.tier
+        division = soloDuo.rank
+        lp = soloDuo.leaguePoints
+        rankedWins = soloDuo.wins
+        rankedLosses = soloDuo.losses
         rank =
           tier === "MASTER" || tier === "GRANDMASTER" || tier === "CHALLENGER"
             ? tier
-            : `${tier} ${rankTier}`
-        lp = leaguePoints
+            : `${tier} ${division}`
       }
     } catch {
       // Ranked data optional
@@ -60,6 +67,10 @@ export async function GET(request: NextRequest) {
       lp,
       level: summoner.summonerLevel,
       profileIconId: summoner.profileIconId,
+      tier,
+      division,
+      rankedWins,
+      rankedLosses,
       valid: true,
     })
   } catch (error) {

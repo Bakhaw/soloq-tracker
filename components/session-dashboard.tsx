@@ -2,12 +2,11 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Trophy, Target, Clock, Swords, TrendingUp, Flame, Zap, Shield, Skull } from "lucide-react"
-import type { Session, SummonerProfile } from "@/types"
+import type { Session } from "@/types"
 import { getSessionStats, getSessionLabel, formatPlaytime } from "@/utils/sessionGrouper"
 
 interface SessionDashboardProps {
   session: Session
-  profile: SummonerProfile
 }
 
 function getSessionMood(winRate: number): { label: string; icon: React.ReactNode; className: string } {
@@ -32,7 +31,7 @@ function getStreakInfo(matches: Session["matches"]): { type: "win" | "loss" | "n
   return { type: first ? "win" : "loss", count }
 }
 
-export function SessionDashboard({ session, profile }: SessionDashboardProps) {
+export function SessionDashboard({ session }: SessionDashboardProps) {
   const stats = getSessionStats(session)
   const label = getSessionLabel(session.date)
   const mood = getSessionMood(session.winRate)
@@ -40,37 +39,18 @@ export function SessionDashboard({ session, profile }: SessionDashboardProps) {
 
   return (
     <div className="flex flex-col gap-5 animate-slide-up">
-      {/* Profile header with rank crest */}
+      {/* Session header */}
       <div className="lol-border rounded-lg p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {/* Rank crest */}
-            <div className="relative h-14 w-14 rounded-lg lol-border-glow flex items-center justify-center shrink-0 bg-card">
-              <span className="text-xl font-bold text-primary">{profile.rank.charAt(0)}</span>
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-mono font-bold text-primary bg-card px-1.5 rounded border border-primary/30">
-                {profile.lp}LP
-              </span>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-bold text-foreground">{profile.name}</h2>
-                <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary h-5">
-                  {profile.region}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {profile.rank} &middot; Level {profile.level}
-              </p>
-              <p className="text-xs text-gold-dim font-medium">{label}</p>
-            </div>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Swords className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">{label}</h3>
           </div>
           <div className="flex flex-col items-end gap-1.5 shrink-0">
-            {/* Mood badge */}
             <Badge className={`text-[10px] font-bold uppercase tracking-wider border ${mood.className} gap-1`}>
               {mood.icon}
               {mood.label}
             </Badge>
-            {/* Streak badge */}
             {streak.type !== "none" && (
               <Badge
                 className={`text-[10px] font-bold border gap-1 ${
@@ -91,7 +71,7 @@ export function SessionDashboard({ session, profile }: SessionDashboardProps) {
         </div>
 
         {/* Win rate XP bar */}
-        <div className="mt-4 flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-muted-foreground font-medium">Session Win Rate</span>
             <span className="font-mono font-bold text-foreground">{session.winRate}%</span>
@@ -121,7 +101,7 @@ export function SessionDashboard({ session, profile }: SessionDashboardProps) {
         </div>
       </div>
 
-      {/* Stats Grid - hexagonal/gaming styled */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
         <GameStatCard
           icon={<Swords className="h-4 w-4 text-primary" />}
