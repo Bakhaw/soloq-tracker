@@ -8,7 +8,7 @@ interface UseMatchesParams {
   enabled?: boolean
 }
 
-export interface MatchesResponse {
+interface MatchesResponse {
   matches: RankedMatch[]
   hasMore: boolean
 }

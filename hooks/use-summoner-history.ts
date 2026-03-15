@@ -92,67 +92,9 @@ export function useSummonerHistory() {
     []
   )
 
-  const getFiltered = useCallback(
-    (query: string): SummonerHistoryEntry[] => {
-      // Only show results when user is typing (query has content)
-      if (!query.trim()) {
-        return []
-      }
-
-      const lowerQuery = query.toLowerCase()
-      
-      // If query includes #, split and search both parts
-      if (lowerQuery.includes("#")) {
-        const [gameNamePart, tagPart = ""] = lowerQuery.split("#", 2)
-        return history
-          .filter((entry) => {
-            const entryGameName = entry.gameName.toLowerCase()
-            const entryTag = entry.tag.toLowerCase()
-            
-            // Match if gameName contains gameNamePart and tag contains tagPart
-            const gameNameMatch = gameNamePart ? entryGameName.includes(gameNamePart) : true
-            const tagMatch = tagPart ? entryTag.includes(tagPart) : true
-            
-            return gameNameMatch && tagMatch
-          })
-          .sort((a, b) => {
-            // Prioritize prefix matches over contains matches
-            const aGameName = a.gameName.toLowerCase()
-            const bGameName = b.gameName.toLowerCase()
-            const aStartsWith = aGameName.startsWith(gameNamePart)
-            const bStartsWith = bGameName.startsWith(gameNamePart)
-            
-            if (aStartsWith && !bStartsWith) return -1
-            if (!aStartsWith && bStartsWith) return 1
-            // If both have same match type, sort by lastSearched
-            return b.lastSearched - a.lastSearched
-          })
-      } else {
-        // No # in query - search in gameName (prefix match preferred, then contains)
-        return history
-          .filter((entry) => {
-            const entryGameName = entry.gameName.toLowerCase()
-            return entryGameName.includes(lowerQuery)
-          })
-          .sort((a, b) => {
-            const aGameName = a.gameName.toLowerCase()
-            const bGameName = b.gameName.toLowerCase()
-            const aStartsWith = aGameName.startsWith(lowerQuery)
-            const bStartsWith = bGameName.startsWith(lowerQuery)
-            
-            if (aStartsWith && !bStartsWith) return -1
-            if (!aStartsWith && bStartsWith) return 1
-            return b.lastSearched - a.lastSearched
-          })
-      }
-    },
-    [history]
-  )
-
   return {
     history: useMemo(() => [...history].sort((a, b) => b.lastSearched - a.lastSearched), [history]),
     addToHistory,
     removeFromHistory,
-    getFiltered,
   }
 }
